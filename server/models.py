@@ -52,6 +52,8 @@ class WorkoutExercises(db.Model):
 
     @validates('reps', 'sets')
     def sets_reps_validation(self, key, value):
+        if value is None:
+            return value
         if not isinstance(value, int) or value <= 0:
             raise ValueError(f"{key} must be a positive integer")
         return value
