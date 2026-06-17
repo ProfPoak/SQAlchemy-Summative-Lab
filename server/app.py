@@ -20,6 +20,7 @@ workout_detail_schema = WorkoutSchema()
 exercise_schema = ExerciseSchema(exclude=('workout_exercises',))
 exercises_schema = ExerciseSchema(many=True, exclude=('workout_exercises',))
 exercise_detail_schema = ExerciseSchema()
+workout_exercises_schema = WorkoutExercisesSchema(exclude=('exercise',))
 
 
 @app.route('/workouts', methods=['GET'])
@@ -120,10 +121,27 @@ def delete_exercise(id):
 
 @app.route('/workouts/<int:workout_id>/exercises/<int:exercise_id>/workout_exercises', methods=['POST'])
 def create_workout_exercise(workout_id, exercise_id):
-    we = WorkoutExercises(workout_id=workout_id, exercise_id=exercise_id, sets=None, reps=None, duration_seconds=1200)
-    db.session.add(we)
-    db.session.commit()
-    return jsonify({'message': f'Exercise:{exercise_id} added to Workout:{workout_id}'}), 201
+    data = request.get_json()
+    if not data:
+        return make_response({'error': 'No input data provided'}, 400)
+    try:
+        validated_data = workout_exercises_schema.load(data)
+        we = WorkoutExercises(
+            workout_id=validated_data['workout_id'],
+            exercise_id=validated_data['exercise_id'],
+            reps=validated_data['reps'],
+            sets=validated_data['sets'],
+            duration_seconds=validated_data['duration_seconds']
+        )
+        db.session.add(we)
+        db.session.commit()
+        response_body = workout_exercises_schema.dump(we)
+        response_status = 201
+    except ValidationError as err:
+        response_body = err.messages
+        response_status = 400
+
+    return make_response(response_body, response_status)
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
