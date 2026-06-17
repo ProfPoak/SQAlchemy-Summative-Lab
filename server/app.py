@@ -1,6 +1,7 @@
 from flask import Flask, make_response, jsonify
 from flask_migrate import Migrate
 from datetime import date
+from marshmallow import ValidationError
 
 from models import *
 from schemas import *
@@ -36,10 +37,23 @@ def get_workout(id):
 
 @app.route('/workouts', methods=['POST'])
 def create_workout():
-    workout = Workout(date=date(2026, 6, 17), duration_minutes=30, notes='Test')
-    db.session.add(workout)
-    db.session.commit()
-    return jsonify({'id': workout.id, 'message': 'Workout created'}), 201
+    data = request.get_json()
+    try:
+        validated_data = workout_schema.load(data)
+        workout = Workout(
+            date=validated_data['date'],
+            duration_minutes=validated_data['duration_minutes'],
+            notes=validated_data.get('notes')
+        )
+        db.session.add(workout)
+        db.session.commit()
+        response_body = workout_schema.dump(workout)
+        response_status = 201
+    except ValidationError as err:
+        response_body = err.messages
+        response_status = 400
+
+    return make_response(response_body, response_status)
 
 @app.route('/workouts/<int:id>', methods=['DELETE'])
 def delete_workout(id):
