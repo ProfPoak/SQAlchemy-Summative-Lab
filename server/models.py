@@ -7,9 +7,20 @@ class Exercise(db.Model):
     __tablename__ = 'exercises'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
+    name = db.Column(db.String, nullable=False)
     category = db.Column(db.String)
     equipment_needed = db.Column(db.Boolean)
+
+    __table_args__ = (
+        db.UniqueConstraint('name', name='unique_exercise_name'),
+    )
+
+    @validates('category')
+    def category_validation(self, key, value):
+        exercise_list = ['run', 'weights', 'biking', 'hiking', 'swimming']
+        if value not in exercise_list:
+            raise ValueError(f"{key} must be one of the following {exercise_list}")
+        return value
 
     workout_exercises = db.relationship('WorkoutExercises', back_populates='exercise')
     workouts = association_proxy('workout_exercises', 'workout')
@@ -21,6 +32,10 @@ class Workout(db.Model):
     date = db.Column(db.Date)
     duration_minutes = db.Column(db.Integer)
     notes = db.Column(db.Text)
+
+    __table_args__ = (
+        db.CheckConstraint('duration_minutes > 0', name='minimum_workout_duration'),
+    )
 
     workout_exercises = db.relationship('WorkoutExercises', back_populates='workout')
     exercises = association_proxy('workout_exercises', 'exercise')
@@ -34,6 +49,12 @@ class WorkoutExercises(db.Model):
     reps = db.Column(db.Integer)
     sets = db.Column(db.Integer)
     duration_seconds = db.Column(db.Integer)
+
+    @validates('reps', 'sets')
+    def sets_reps_validation(self, key, value):
+        if not isinstance(value, int) or value <= 0:
+            raise ValueError(f"{key} must be a positive integer")
+        return value
 
     exercise = db.relationship('Exercise', back_populates='workout_exercises')
     workout = db.relationship('Workout', back_populates='workout_exercises')
