@@ -1,4 +1,4 @@
-from flask import Flask, make_response, jsonify
+from flask import Flask, make_response, request
 from flask_migrate import Migrate
 from datetime import date
 from marshmallow import ValidationError
@@ -38,6 +38,8 @@ def get_workout(id):
 @app.route('/workouts', methods=['POST'])
 def create_workout():
     data = request.get_json()
+    if not data:
+        return make_response({'error': 'No input data provided'}, 400)
     try:
         validated_data = workout_schema.load(data)
         workout = Workout(
@@ -59,7 +61,7 @@ def create_workout():
 def delete_workout(id):
     workout = db.session.get(Workout, id)
     if not workout:
-        return jsonify({'error': 'Workout not found'}), 404
+        return make_response({'error': f'Workout id: {id} not found'}, 404)
     db.session.delete(workout)
     db.session.commit()
     return '', 204
@@ -87,7 +89,7 @@ def create_exercise():
 def delete_exercise(id):
     exercise = db.session.get(Exercise, id)
     if not exercise:
-        return jsonify({'error': 'Exercise not found'}), 404
+        return make_response({'error': f'Exercise id: {id} not found'}, 404)
     db.session.delete(exercise)
     db.session.commit()
     return '', 204
