@@ -17,6 +17,10 @@ db.init_app(app)
 workout_schema = WorkoutSchema(exclude=('workout_exercises',))
 workouts_schema = WorkoutSchema(many=True, exclude=('workout_exercises',))
 workout_detail_schema = WorkoutSchema()
+exercise_schema = ExerciseSchema(exclude=('workout_exercises',))
+exercises_schema = ExerciseSchema(many=True, exclude=('workout_exercises',))
+exercise_detail_schema = ExerciseSchema()
+
 
 @app.route('/workouts', methods=['GET'])
 def get_workouts():
@@ -69,14 +73,19 @@ def delete_workout(id):
 @app.route('/exercises', methods=['GET'])
 def get_exercises():
     exercises = Exercise.query.all()
-    return jsonify([exercise.id for exercise in exercises]), 200
+    response_body = exercises_schema.dump(exercises)
+    return make_response(response_body, 200)
 
 @app.route('/exercises/<int:id>', methods=['GET'])
 def get_exercise(id):
     exercise = db.session.get(Exercise, id)
     if exercise:
-        return jsonify({'id': exercise.id}), 200
-    return jsonify({'error': 'Exercise not found'}), 404
+        response_body = exercise_detail_schema.dump(exercise)
+        response_status = 200
+    else:
+        response_body = {'error': f'Exercise id: {id} not found'}
+        response_status = 404
+    return make_response(response_body, response_status)
 
 @app.route('/exercises', methods=['POST'])
 def create_exercise():
