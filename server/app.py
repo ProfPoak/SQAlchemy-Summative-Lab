@@ -49,7 +49,7 @@ def create_workout():
         workout = Workout(
             date=validated_data['date'],
             duration_minutes=validated_data['duration_minutes'],
-            notes=validated_data.get('notes')
+            notes=validated_data['notes']
         )
         db.session.add(workout)
         db.session.commit()
@@ -89,10 +89,25 @@ def get_exercise(id):
 
 @app.route('/exercises', methods=['POST'])
 def create_exercise():
-    exercise = Exercise(name='Test', category='run', equipment_needed=False)
-    db.session.add(exercise)
-    db.session.commit()
-    return jsonify({'id': exercise.id, 'message': f'{exercise.name} created'}), 201
+    data = request.get_json()
+    if not data:
+        return make_response({'error': 'No input data provided'}, 400)
+    try:
+        validated_data = exercise_schema.load(data)
+        exercise = Exercise(
+            name=validated_data['name'],
+            category=validated_data['category'],
+            equipment_needed=validated_data['equipment_needed']
+        )
+        db.session.add(exercise)
+        db.session.commit()
+        response_body = exercise_schema.dump(exercise)
+        response_status = 201
+    except ValidationError as err:
+        response_body = err.messages
+        response_status = 400
+
+    return make_response(response_body, response_status)
 
 @app.route('/exercises/<int:id>', methods=['DELETE'])
 def delete_exercise(id):
