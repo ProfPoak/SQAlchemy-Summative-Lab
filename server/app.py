@@ -68,5 +68,12 @@ def delete_exercise(id):
     db.session.commit()
     return '', 204
 
+@app.route('/workouts/<int:workout_id>/exercises/<int:exercise_id>/workout_exercises', methods=['POST'])
+def create_workout_exercise(workout_id, exercise_id):
+    we = WorkoutExercises(workout_id=workout_id, exercise_id=exercise_id, sets=None, reps=None, duration_seconds=1200)
+    db.session.add(we)
+    db.session.commit()
+    return jsonify({'message': f'Exercise:{exercise_id} added to Workout:{workout_id}'}), 201
+
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
