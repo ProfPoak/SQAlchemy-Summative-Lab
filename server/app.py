@@ -13,17 +13,26 @@ migrate = Migrate(app, db)
 
 db.init_app(app)
 
+workout_schema = WorkoutSchema(exclude=('workout_exercises',))
+workouts_schema = WorkoutSchema(many=True, exclude=('workout_exercises',))
+workout_detail_schema = WorkoutSchema()
+
 @app.route('/workouts', methods=['GET'])
 def get_workouts():
     workouts = Workout.query.all()
-    return jsonify([workout.id for workout in workouts]), 200
+    response_body = workouts_schema.dump(workouts)
+    return make_response(response_body, 200)
 
 @app.route('/workouts/<int:id>', methods=['GET'])
 def get_workout(id):
     workout = db.session.get(Workout, id)
     if workout:
-        return jsonify({'id': workout.id}), 200
-    return jsonify({'error': 'Workout not found'}), 404
+        response_body = workout_detail_schema.dump(workout)
+        response_status = 200
+    else:
+        response_body = {'error': f'Workout id: {id} not found'}
+        response_status = 404
+    return make_response(response_body, response_status)
 
 @app.route('/workouts', methods=['POST'])
 def create_workout():
