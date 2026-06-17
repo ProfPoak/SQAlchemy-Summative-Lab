@@ -7,9 +7,13 @@ class Exercise(db.Model):
     __tablename__ = 'exercises'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
+    name = db.Column(db.String, nullable=False)
     category = db.Column(db.String)
     equipment_needed = db.Column(db.Boolean)
+
+    __table_args__ = (
+        db.UniqueConstraint('name', name='unique_exercise_name'),
+    )
 
     workout_exercises = db.relationship('WorkoutExercises', back_populates='exercise')
     workouts = association_proxy('workout_exercises', 'workout')
@@ -21,6 +25,10 @@ class Workout(db.Model):
     date = db.Column(db.Date)
     duration_minutes = db.Column(db.Integer)
     notes = db.Column(db.Text)
+
+    __table_args__ = (
+        db.CheckContsraint('duration_minutes > 0', name='minimum_workout_duration'),
+    )
 
     workout_exercises = db.relationship('WorkoutExercises', back_populates='workout')
     exercises = association_proxy('workout_exercises', 'exercise')
