@@ -1,5 +1,6 @@
-from flask import Flask, make_response
+from flask import Flask, make_response, jsonify
 from flask_migrate import Migrate
+from datetime import date
 
 from models import *
 
@@ -11,7 +12,68 @@ migrate = Migrate(app, db)
 
 db.init_app(app)
 
-# Define Routes here
+@app.route('/workouts', methods=['GET'])
+def get_workouts():
+    workouts = Workout.query.all()
+    return jsonify([workout.id for workout in workouts]), 200
+
+@app.route('/workouts/<int:id>', methods=['GET'])
+def get_workout(id):
+    workout = db.session.get(Workout, id)
+    if workout:
+        return jsonify({'id': workout.id}), 200
+    return jsonify({'error': 'Workout not found'}), 404
+
+@app.route('/workouts', methods=['POST'])
+def create_workout():
+    workout = Workout(date=date(2026, 6, 17), duration_minutes=30, notes='Test')
+    db.session.add(workout)
+    db.session.commit()
+    return jsonify({'id': workout.id, 'message': 'Workout created'}), 201
+
+@app.route('/workouts/<int:id>', methods=['DELETE'])
+def delete_workout(id):
+    workout = db.session.get(Workout, id)
+    if not workout:
+        return jsonify({'error': 'Workout not found'}), 404
+    db.session.delete(workout)
+    db.session.commit()
+    return '', 204
+
+@app.route('/exercises', methods=['GET'])
+def get_exercises():
+    exercises = Exercise.query.all()
+    return jsonify([exercise.id for exercise in exercises]), 200
+
+@app.route('/exercises/<int:id>', methods=['GET'])
+def get_exercise(id):
+    exercise = db.session.get(Exercise, id)
+    if exercise:
+        return jsonify({'id': exercise.id}), 200
+    return jsonify({'error': 'Exercise not found'}), 404
+
+@app.route('/exercises', methods=['POST'])
+def create_exercise():
+    exercise = Exercise(name='Test', category='run', equipment_needed=False)
+    db.session.add(exercise)
+    db.session.commit()
+    return jsonify({'id': exercise.id, 'message': f'{exercise.name} created'}), 201
+
+@app.route('/exercises/<int:id>', methods=['DELETE'])
+def delete_exercise(id):
+    exercise = db.session.get(Exercise, id)
+    if not exercise:
+        return jsonify({'error': 'Exercise not found'}), 404
+    db.session.delete(exercise)
+    db.session.commit()
+    return '', 204
+
+@app.route('/workouts/<int:workout_id>/exercises/<int:exercise_id>/workout_exercises', methods=['POST'])
+def create_workout_exercise(workout_id, exercise_id):
+    we = WorkoutExercises(workout_id=workout_id, exercise_id=exercise_id, sets=None, reps=None, duration_seconds=1200)
+    db.session.add(we)
+    db.session.commit()
+    return jsonify({'message': f'Exercise:{exercise_id} added to Workout:{workout_id}'}), 201
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
