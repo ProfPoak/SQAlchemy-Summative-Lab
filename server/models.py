@@ -22,7 +22,7 @@ class Exercise(db.Model):
             raise ValueError(f"{key} must be one of the following {exercise_list}")
         return value
 
-    workout_exercises = db.relationship('WorkoutExercises', back_populates='exercise')
+    workout_exercises = db.relationship('WorkoutExercises', back_populates='exercise', cascade='all, delete-orphan')
     workouts = association_proxy('workout_exercises', 'workout')
 
     def __repr__(self):
@@ -40,7 +40,7 @@ class Workout(db.Model):
         db.CheckConstraint('duration_minutes > 0', name='minimum_workout_duration'),
     )
 
-    workout_exercises = db.relationship('WorkoutExercises', back_populates='workout')
+    workout_exercises = db.relationship('WorkoutExercises', back_populates='workout', cascade='all, delete-orphan')
     exercises = association_proxy('workout_exercises', 'exercise')
 
     def __repr__(self):
