@@ -40,5 +40,33 @@ def delete_workout(id):
     db.session.commit()
     return '', 204
 
+@app.route('/exercises', methods=['GET'])
+def get_exercises():
+    exercises = Exercise.query.all()
+    return jsonify([exercise.id for exercise in exercises]), 200
+
+@app.route('/exercises/<int:id>', methods=['GET'])
+def get_exercise(id):
+    exercise = db.session.get(Exercise, id)
+    if exercise:
+        return jsonify({'id': exercise.id}), 200
+    return jsonify({'error': 'Exercise not found'}), 404
+
+@app.route('/exercises', methods=['POST'])
+def create_exercise():
+    exercise = Exercise(name='Test', category='run', equipment_needed=False)
+    db.session.add(exercise)
+    db.session.commit()
+    return jsonify({'id': exercise.id, 'message': f'{exercise.name} created'}), 201
+
+@app.route('/exercises/<int:id>', methods=['DELETE'])
+def delete_exercise(id):
+    exercise = db.session.get(Exercise, id)
+    if not exercise:
+        return jsonify({'error': 'Exercise not found'}), 404
+    db.session.delete(exercise)
+    db.session.commit()
+    return '', 204
+
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
