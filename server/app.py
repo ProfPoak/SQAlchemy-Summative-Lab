@@ -3,6 +3,7 @@ from flask_migrate import Migrate
 from datetime import date
 
 from models import *
+from schemas import *
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
