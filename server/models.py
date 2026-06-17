@@ -25,6 +25,9 @@ class Exercise(db.Model):
     workout_exercises = db.relationship('WorkoutExercises', back_populates='exercise')
     workouts = association_proxy('workout_exercises', 'workout')
 
+    def __repr__(self):
+        return f'<Exercise {self.id}: {self.name} ({self.category})>'
+
 class Workout(db.Model):
     __tablename__ = 'workouts'
 
@@ -39,6 +42,9 @@ class Workout(db.Model):
 
     workout_exercises = db.relationship('WorkoutExercises', back_populates='workout')
     exercises = association_proxy('workout_exercises', 'exercise')
+
+    def __repr__(self):
+        return f'<Workout {self.id}: {self.date}, {self.duration_minutes} min>'
 
 class WorkoutExercises(db.Model):
     __tablename__ = 'workout_exercises'
@@ -60,3 +66,6 @@ class WorkoutExercises(db.Model):
 
     exercise = db.relationship('Exercise', back_populates='workout_exercises')
     workout = db.relationship('Workout', back_populates='workout_exercises')
+
+    def __repr__(self):
+        return f'<WorkoutExercises {self.id}: workout={self.workout_id}, exercise={self.exercise.name}, reps={self.reps}, sets={self.sets}>'
